@@ -15,7 +15,6 @@ services:
       timeout: 5s
       retries: 3
     ports:
-      - 5672:5672
       - 15672:15672
     networks:
       app_net:
@@ -26,8 +25,6 @@ services:
     container_name: 'redis'
     volumes:
       - ./.docker/redis:/data
-    ports:
-      - 9999:6379
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
@@ -52,15 +49,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    ports:
-      - "5432:5432"
 
   go-gethnode1:
     build: ./go-ethereum
-    ports:
-      - "8545:8545" # HTTP RPC
-      - "30303:30303"
-      - "30303:30303/udp"
     volumes:
       - ./.docker/ethereum-data/.ethereum:/root/.ethereum
       - ./.docker/ethereum-data/keystore:/root/.ethereum/testnet/keystore:ro
@@ -79,8 +70,6 @@ services:
       - "INTERVAL=5"
     depends_on:
       - "rabbitmq"
-    ports:
-      - 88:1488
     networks:
       app_net:
         ipv4_address: 10.1.1.10
@@ -101,8 +90,6 @@ services:
       - "rabbitmq"
       - "postgres"
       - "redis"
-    ports:
-      - 89:1488
     networks:
       app_net:
         ipv4_address: 10.1.1.11
