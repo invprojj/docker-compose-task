@@ -79,11 +79,13 @@ services:
       - "INTERVAL=5"
     depends_on:
       - "rabbitmq"
+    ports:
+      - 88:1488
     networks:
       app_net:
         ipv4_address: 10.1.1.10
     healthcheck:
-      test: curl -sS http://127.0.0.1:1488 || echo 1
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1488/"]
       interval: 10s
       timeout: 30s
       retries: 3
@@ -99,11 +101,13 @@ services:
       - "rabbitmq"
       - "postgres"
       - "redis"
+    ports:
+      - 89:1488
     networks:
       app_net:
         ipv4_address: 10.1.1.11
     healthcheck:
-      test: curl -sS http://127.0.0.1:1488 || echo 1
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1488/"]
       interval: 10s
       timeout: 30s
       retries: 3

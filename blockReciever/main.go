@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const CounterKey = "BLOCKSENDED"
+const CounterKey = "BLOCKSSENT"
 
 var RabbitQueue amqp.Queue
 var RabbitChannel *amqp.Channel
@@ -23,12 +23,7 @@ func main() {
 
 	log.Println("Start App")
 
-
-	go func() {
-		for true {
-			handleRequests()
-		}
-	}()
+	startApi()
 
 	time.Sleep(40 * time.Second)
 

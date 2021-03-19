@@ -9,6 +9,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const OnStartDelay = 42
+
 var RabbitQueue amqp.Queue
 var RabbitChannel *amqp.Channel
 
@@ -16,17 +18,13 @@ func main() {
 
 	log.Println("Starting App")
 
-	go func() {
-		for true {
-			handleRequests()
-		}
-	}()
+	startApi()
 
-	time.Sleep(40 * time.Second)
+	time.Sleep(time.Duration(OnStartDelay) * time.Second)
 
 	CreateAndSetupRabbitMqConnection()
 
-	for true {
+	for {
 
 		block, err := GetLastBlockFromNode()
 		if err != nil {

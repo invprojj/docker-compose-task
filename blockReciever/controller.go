@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -11,7 +10,8 @@ func homePage(w http.ResponseWriter, r *http.Request){
 	fmt.Println("Endpoint Hit: homePage")
 }
 
-func handleRequests() {
+func startApi() {
 	http.HandleFunc("/", homePage)
-	log.Fatal(http.ListenAndServe(":1488", nil))
+	//log.Fatal(http.ListenAndServe(":1488", nil))
+	go http.ListenAndServe(":1488", nil)
 }

@@ -32,9 +32,11 @@ RUN cp /build/main .
 ############################
 # STEP 2 build a small image
 ############################
-FROM scratch
+FROM alpine
 
 COPY --from=builder /dist/main /
+
+RUN apk add --no-cache curl
 
 # Command to run the executable
 ENTRYPOINT ["/main"]
