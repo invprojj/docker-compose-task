@@ -1,0 +1,115 @@
+version: "3.9"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    env_file:
+      - configs/rabbitmq/.env.rmq
+    volumes:
+      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      app_net:
+        ipv4_address: 10.1.1.4
+
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - ./.docker/redis:/data
+    ports:
+      - 9999:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      app_net:
+        ipv4_address: 10.1.1.02
+
+  postgres:
+    image: "postgres:alpine"
+    container_name: 'pg-block-storage'
+    env_file:
+      - configs/postgresql/.env.pg_file
+    volumes:
+      - ./.docker/postgresql/data:/var/lib/postgresql/data
+    networks:
+      app_net:
+        ipv4_address: 10.1.1.03
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "5432:5432"
+
+  go-gethnode1:
+    build: ./go-ethereum
+    ports:
+      - "8545:8545" # HTTP RPC
+      - "30303:30303"
+      - "30303:30303/udp"
+    volumes:
+      - ./.docker/ethereum-data/.ethereum:/root/.ethereum
+      - ./.docker/ethereum-data/keystore:/root/.ethereum/testnet/keystore:ro
+    command: --syncmode light --rpc --rpcaddr 0.0.0.0 --nousb
+    networks:
+      app_net:
+        ipv4_address: 10.1.1.15
+
+  block_sender:
+    build: ./blockSender
+    container_name: "block_sender"
+    restart: "on-failure"
+    environment:
+      - "RABBIT_CONN_STR=amqp://guest:guest@10.1.1.4:5672"
+      - "NODE_CONN_STR=http://10.1.1.15:8545"
+      - "INTERVAL=5"
+    depends_on:
+      - "rabbitmq"
+    networks:
+      app_net:
+        ipv4_address: 10.1.1.10
+    healthcheck:
+      test: curl -sS http://127.0.0.1:1488 || echo 1
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  block_reciever:
+    build: ./blockReciever
+    container_name: "block_receiver"
+    restart: "on-failure"
+    environment:
+      - "RABBIT_CONN_STR=amqp://guest:guest@10.1.1.4:5672"
+      - "REDIS_HOST=10.1.1.2:6379"
+    depends_on:
+      - "rabbitmq"
+      - "postgres"
+      - "redis"
+    networks:
+      app_net:
+        ipv4_address: 10.1.1.11
+    healthcheck:
+      test: curl -sS http://127.0.0.1:1488 || echo 1
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+networks:
+  app_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.1.1.0/24"

@@ -1,0 +1,3 @@
+CREATE TABLE blocknumber(
+	number VARCHAR PRIMARY KEY NOT NULL,
+);
