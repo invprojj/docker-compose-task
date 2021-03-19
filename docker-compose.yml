@@ -23,6 +23,7 @@ services:
 
   redis:
     image: "redis:alpine"
+    container_name: 'redis'
     volumes:
       - ./.docker/redis:/data
     ports:
@@ -70,7 +71,7 @@ services:
 
   block_sender:
     build: ./blockSender
-    container_name: "block_sender"
+    container_name: "block-sender"
     restart: "on-failure"
     environment:
       - "RABBIT_CONN_STR=amqp://guest:guest@10.1.1.4:5672"
@@ -89,7 +90,7 @@ services:
 
   block_reciever:
     build: ./blockReciever
-    container_name: "block_receiver"
+    container_name: "block-receiver"
     restart: "on-failure"
     environment:
       - "RABBIT_CONN_STR=amqp://guest:guest@10.1.1.4:5672"
